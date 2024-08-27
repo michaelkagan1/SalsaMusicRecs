@@ -1,0 +1,26 @@
+1. Song list generator for salsa music
+	a. Recommends songs of similar speed/tempo
+	b. Creates smart album prioritizing type/ characteristics of base song
+
+General layout:
+	One page form
+	input text box with search function and autocomplete dynamically showing top 10 results
+	Under search box: song list with typical spotify data will appear, along with heart symbol
+	Optionally, link with spotify account and save songs to liked or new list
+
+Timeline:
+	a. Create backend first with Spotify API
+	b. Determine songs speed
+	c. Make queries for songs, find song suggestions 
+	d. Build out front end
+
+Detailed:
+	1. Backend with Spotify API:
+		1.1 Search song by title --> Return list of top 10 results	DONE
+		1.2 Get characteristics of entered song				DONE
+		1.3 Make query with given search criteria			DONE
+		1.4 Parse query results						DONE
+		1.5 Return list of recommendations				DONE
+		1.6 Create playlist and add list to new playlist		:IN PROGRESS --> "Valid user authentication required"
+		1.7 Wrap in authorization to allow for separate users
+
