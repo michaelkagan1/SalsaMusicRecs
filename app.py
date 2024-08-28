@@ -4,10 +4,7 @@ adapted to python, flask
 
 
 ISSUES (8/27/24)
-	1. If I log in in incognito, doesn't direct me to accept permissions, but rather redirects me to accounts.spotify.com/en/status
-	2. Then, if I revisit my localserver, I'm shown permission requests. This should've happened automatically.
-	3. Callback route not reached. Seems like spotify either redirects to /login/password, or even to my requested callback, but doesn't even trigger first print statement in said route.
-	3. 
+	1. Works in Chrome but not in Safari. 
 """
 import pdb
 
