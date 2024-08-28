@@ -2,6 +2,7 @@
 Using PKCE OAuth2 Flow: https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow#request-user-authorization
 adapted to python, flask
 
+
 ISSUES (8/27/24)
 	1. If I log in in incognito, doesn't direct me to accept permissions, but rather redirects me to accounts.spotify.com/en/status
 	2. Then, if I revisit my localserver, I'm shown permission requests. This should've happened automatically.
@@ -111,7 +112,6 @@ def callback():
 
 @app.route("/home", methods=['GET','POST'])
 def home():
-	pdb.set_trace()
 	print("Debug: home route reached!")
 	if 'access_token' not in session:
 		return redirect("/login")

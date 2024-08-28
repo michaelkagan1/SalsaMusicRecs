@@ -50,12 +50,11 @@ def login():
 	
 	#Redirect to authorize uri
 	print(authorize_path)
-	return authorize_path
+	return redirect(authorize_path)
 	
 @app.route("/callback")
 def callback():
 	#Catch exceptions with request.args
-#	pdb.set_trace()
 	print("Callback route reached.")
 	if "error" in request.args:
 		return request.args.get('error')  
@@ -82,10 +81,16 @@ def callback():
 			}
 
 	#Send post request to token uri
+	response = requests.post(TOKEN_ENDPOINT, data=params, headers=header)
 
 	#Catch exceptions in response url using (check for error or state mismatch)
+	if response.status_code != 200:
+		return response.status_code, response.content
 
 	#Save token, refresh, expiration in session
+	data = response.json()
+	session['token']  
+	session['expiration']
 
 	return "Callback page"
 
