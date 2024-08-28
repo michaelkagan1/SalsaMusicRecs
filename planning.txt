@@ -21,6 +21,17 @@ Detailed:
 		1.3 Make query with given search criteria			DONE
 		1.4 Parse query results						DONE
 		1.5 Return list of recommendations				DONE
-		1.6 Create playlist and add list to new playlist		:IN PROGRESS --> "Valid user authentication required"
-		1.7 Wrap in authorization to allow for separate users
+		1.6 Create playlist and add list to new playlist		IN PROGRESS...
+		1.7 Wrap in authorization to allow for separate users		DONE
 
+	2. Pseudo front-end using print statements to server
+		2.1 Enable all of step 1, with OATH2 token
+		2.2 Combine helper functions to one python file
+		2.3 Add song to my liked list in Spotify
+		2.4 Add song to playlist in spotify
+		2.5 Play song
+
+	3. Implement UI
+		3.1 Basic index/home page with jinja layout
+		3.2 Search song input with autosuggest drop down option menu
+		3.3 Return list of songs with artist names

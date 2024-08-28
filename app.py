@@ -5,15 +5,17 @@ adapted to python, flask
 
 ISSUES (8/27/24)
 	1. Works in Chrome but not in Safari. 
+	2. Next: check multiple scopes for permissions and encoding
 """
 import pdb
 
-from flask import Flask, render_template, redirect, request, session
+from flask import Flask, render_template, redirect, request, session, jsonify
 from flask_session import Session
 from datetime import datetime
 import urllib.parse
-import requests
-import authorizeme	#my own python file
+import requests, os
+import authorizeme
+import helpers as H	#my own python file
 
 app = Flask(__name__)
 app.secret_key = 'Kjske-6VXxb-9p3vW-oIUt6'
@@ -35,6 +37,7 @@ AUTH_URL = "https://accounts.spotify.com/authorize"
 TOKEN_URL = "https://accounts.spotify.com/api/token"
 API_BASE_URL = "https://api.spotify.com/v1/"
 
+
 @app.route("/", methods=["GET","POST"])
 def index():
 	print("Debug: index route reached!")
@@ -42,16 +45,11 @@ def index():
 
 @app.route("/login")
 def login(): 	#Adapted from Spotify documentation
-	#pdb.set_trace()
 	print("Debug: login route reached!")
 	if request.method == "GET":
-		"""
 		scopes  = ['user-modify-playback-state', 'streaming', 'playlist-modify-private', 'playlist-modify-public']      #List of all desired scopes for application, including adding/modifying
                 	                                                                                                        #playlists and allowing music playback.
 		scope = ' '.join(scopes)        #Concatenate string of scopes joining by a space.
-		"""
-		scope = 'playlist-modify-public'
-		print(scope)
 
 		params = { 
 			"client_id": CLIENT_ID, 
@@ -69,7 +67,6 @@ def login(): 	#Adapted from Spotify documentation
 
 @app.route("/callback", methods=["GET","POST"])
 def callback():
-	pdb.set_trace()
 	print("Debug: callback route reached!")
 
 	#check for error by not presence of "code" in the callback url 
@@ -110,12 +107,21 @@ def callback():
 @app.route("/home", methods=['GET','POST'])
 def home():
 	print("Debug: home route reached!")
-	if 'access_token' not in session:
-		return redirect("/login")
-	if datetime.now().timestamp() > session['expiration']:
-		return redirect("/refresh-token")
+	if request.method == "GET":
+		if 'access_token' not in session:
+			return redirect("/login")
+		if datetime.now().timestamp() > session['expiration']:
+			return redirect("/refresh-token")
 
-	return "Fuck Yeah!"
+		token = session['access_token']
+		response = song_search(token, "Blackbird")
+#		print_songs(response)
+		
+		return jsonify(print_songs(response))
+	elif request.method == "POST":
+		query = request.form.get("title-input")
+		
+		return "Post submitted!"
 
 @app.route("/refresh-token")
 def refresh_token():
@@ -149,6 +155,43 @@ def refresh_token():
 	
 	return redirect("/home")
 
+
+
+
+def song_search(ACCESS_TOKEN, song_name, limit=10):
+	#	ACCESS_TOKEN = session['access_token'] 
+	headers = {
+            "Authorization": f"Bearer {ACCESS_TOKEN}"
+                }
+	endpoint = "https://api.spotify.com/v1/search"
+
+	params = {
+                'q': song_name,
+                'type': 'track',
+                'limit': limit
+                }
+
+	response = requests.get(endpoint, headers=headers, params=params)
+	return response
+
+def print_songs(response):
+	data = response.json()
+	tracks = data.get('tracks',{}).get('items',[])
+	songs = []
+	for track in tracks:
+		name = track.get('name')
+		songid = track.get('id')
+		artist = track.get('artists', [{}])[0].get('name')
+		print(f"Song: {name}, Artist: {artist}, song_id: {songid}")
+		print("\n")
+		songs.append({"Song":name, "Artist":artist, "Song id":songid})
+		
+	return songs
+
+
+
+
+
+
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
-
