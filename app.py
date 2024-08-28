@@ -69,7 +69,6 @@ def login(): 	#Adapted from Spotify documentation
 		auth_url = auth_url.replace('+','%20')				#+s in url string changed to %20. Might not be necessary, but gave it a shot in debugging
 		return redirect(auth_url)
 
-
 @app.route("/callback", methods=["GET","POST"])
 def callback():
 	pdb.set_trace()
