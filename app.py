@@ -75,9 +75,11 @@ def callback():
 	
 	if STATE != request.args.get("state"):	#state code returned from Spotify server during authorization request must match saved STATE value from constants
 		#return "state values do not match"
-		pass
+		return "State value mismatch!"
+
 	if 'code' in request.args:
 		print("fuck yeahh")
+		#pdb.set_trace()
 		authorization_code = request.args.get("code")	#authorization code returned from Spotify server during auth request
 
 		params = {
@@ -101,7 +103,7 @@ def callback():
 		session['access_token'] = data.get("access_token")
 		session['refresh_token'] = data.get("refresh_token")
 		session['expiration'] = datetime.now().timestamp() + data.get("expires_in")
-
+		print("before redirect")
 		return redirect("/home")
 
 @app.route("/refresh-token")
@@ -154,6 +156,8 @@ def home():
 		#		pdb.set_trace()
 		query = request.form.get("title-input")
 		response = song_search(session['access_token'], query)
+		if response.status_code != 200:
+			return response.text
 		songs = print_songs(response)
 
 		return render_template("results.html", songs=songs)

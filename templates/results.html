@@ -4,29 +4,30 @@
 
 <br><br>
 <hl>
+<div class='container'> 
+	<form action='/recs' method='post' name='results-form'>
+		<table name="results-list" class="table table-success table-striped table-hover" style='width: 50%;'>
+			<caption style='caption-side: top' class='h5'>Choose a Song</caption>
+			<thead>
+				<th>Title</th>
+				<th>Artist</th>
+				<th></th>
+			</thead>
+		{% for song in songs %}
+		
+			<tr>
+				<td>{{song['Title']}}</td>	
+				<td>{{song['Artist']}}</td>	
+				<td>
+					<input name='song_id' type='hidden' value={{song['id']}} >
+					<button class='button-sml'>Find Recs</button>
+				</td>
+			</tr>
 
-<form action='/recs' method='post' name='results-form'>
-	<table name="results-list" class='results-table'>
-		<caption>Recommended songs</caption>
-		<thead>
-			<th>Title</th>
-			<th>Artist</th>
-			<th></th>
-		</thead>
-	{% for song in songs %}
-	
-		<tr>
-			<td>{{song['Title']}}</td>	
-			<td>{{song['Artist']}}</td>	
-			<td>
-				<input name='song_id' type='hidden' value={{song['id']}} >
-				<button class='button-sml'>Find Recs</button>
-			</td>
-		</tr>
+		{% endfor %}
 
-	{% endfor %}
-
-	</table>
-</form>
+		</table>
+	</form>
+</div>
 
 {% endblock %}

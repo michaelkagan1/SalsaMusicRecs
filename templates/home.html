@@ -1,12 +1,16 @@
 {% extends "layout.html" %}
 
 {% block main %}
-
+<div class='container'>
+	<br>
 	<form action='/home' name='search-form' method='post'>
-		<input name='title-input' type='text' autofocus autocomplete='off' placeholder='Song title'>
-		<button type='submit'>Search</button>
+	<div class="input-group mb-3" style="width: 30%;">
+	    <input name='title-input' autofocus autocomplete='off' type="text" class="form-control" placeholder="Song title" aria-label="Song title" aria-describedby="button-addon2">
+	    <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Search Song</button>
+	</div>
 	</form>
 
+</div>
 	{% block results %}{% endblock %}
 
 {% endblock %}
