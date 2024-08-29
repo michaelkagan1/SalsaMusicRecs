@@ -104,25 +104,6 @@ def callback():
 
 		return redirect("/home")
 
-@app.route("/home", methods=['GET','POST'])
-def home():
-	print("Debug: home route reached!")
-	if request.method == "GET":
-		if 'access_token' not in session:
-			return redirect("/login")
-		if datetime.now().timestamp() > session['expiration']:
-			return redirect("/refresh-token")
-
-		token = session['access_token']
-		response = song_search(token, "Blackbird")
-#		print_songs(response)
-		
-		return jsonify(print_songs(response))
-	elif request.method == "POST":
-		query = request.form.get("title-input")
-		
-		return "Post submitted!"
-
 @app.route("/refresh-token")
 def refresh_token():
 	print("Debug: refresh_token route reached!")
@@ -156,6 +137,35 @@ def refresh_token():
 	return redirect("/home")
 
 
+@app.route("/home", methods=['GET','POST'])
+def home():
+	print("Debug: home route reached!")
+	if request.method == "GET":
+		if 'access_token' not in session:
+			return redirect("/login")
+		if datetime.now().timestamp() > session['expiration']:
+			return redirect("/refresh-token")
+
+		response = song_search(session['access_token'], "Blackbird")
+#		print_songs(response)
+		
+		return render_template("home.html")
+	elif request.method == "POST":
+		#		pdb.set_trace()
+		query = request.form.get("title-input")
+		response = song_search(session['access_token'], query)
+		songs = print_songs(response)
+
+		return render_template("results.html", songs=songs)
+
+@app.route("/recs", methods=['GET','POST'])
+def recs():
+	if request.method == 'POST':
+		song_id = request.form.get("song_id")
+		data = recommend(session['access_token'], song_id)	#Runs recommend function with token in session, based on speed and seed of queried song.				
+		songs = parse_tracks(session['access_token'], data)
+		
+		return render_template("recs.html", songs=songs)
 
 
 def song_search(ACCESS_TOKEN, song_name, limit=10):
@@ -182,16 +192,82 @@ def print_songs(response):
 		name = track.get('name')
 		songid = track.get('id')
 		artist = track.get('artists', [{}])[0].get('name')
+		"""
 		print(f"Song: {name}, Artist: {artist}, song_id: {songid}")
-		print("\n")
-		songs.append({"Song":name, "Artist":artist, "Song id":songid})
+		print("\n") """
+		songs.append({"Title":name, "Artist":artist, "id":songid})
 		
 	return songs
 
+def features(ACCESS_TOKEN, song_id):
+        headers = {
+                "Authorization": f"Bearer {ACCESS_TOKEN}"
+                }
+        endpoint = f"https://api.spotify.com/v1/audio-features/{song_id}"
 
+        response = requests.get(endpoint, headers=headers)
+        return response.json()
 
+def tempo(ACCESS_TOKEN, song_id):
+        data  = features(ACCESS_TOKEN, song_id)
+        bpm = data.get('tempo')
+        return round(bpm, 1)
 
+def recommend(ACCESS_TOKEN, song_id = '5mg6sU732O35VMfCYk3lmX'):      #"Ven Devorame Otra Vez"
+        headers = {
+                "Authorization": f"Bearer {ACCESS_TOKEN}"
+                }
+        bpm = tempo(ACCESS_TOKEN, song_id)
+        target = round(bpm)
+        min_bpm = target * 0.95
+        max_bpm = target * 1.05
+        limit = 10
+        tracks = [song_id]
+        #set_trace()
+        lim = f'limit={limit}'
+        seed_tracks = 'seed_tracks='+(',').join(tracks)
+        seed_genres = 'seed_genres=salsa'
+        min_tempo = f"min_tempo={min_bpm}"
+        max_tempo = f"max_tempo={max_bpm}"
+        target_tempo = f"target_tempo={target}"
 
+        endpoint = "https://api.spotify.com/v1/recommendations"
+        param_list = [lim, seed_tracks, seed_genres, min_tempo, max_tempo, target_tempo]
+
+        url = endpoint + '?' + ('&').join(param_list)
+
+        response = requests.get(url, headers=headers)
+
+        if response.status_code != 200:
+                print(f"Error: {response.status_code}, {response.text}")
+                return None
+        print(f"{response.status_code}")
+        return response.json()
+
+"""
+def parse_tracks(ACCESS_TOKEN, data):
+        tracks = data.get("tracks",[])
+        songs = []
+        for track in tracks:
+		name = track.get("name", "")
+		song_id = track.get("id", "")
+		bpm = tempo(ACCESS_TOKEN, song_id)
+		artist = track.get("artists", [{}])[0].get("name","")
+		songs.append({"name": name, "artist": artist, "tempo":bpm, "id":song_id})
+	return songs	
+"""	
+def parse_tracks(ACCESS_TOKEN, data):
+	tracks = data.get("tracks", [])
+	songs = []
+
+	for track in tracks:
+		name = track.get("name", "")
+		song_id = track.get("id", "")
+		bpm = tempo(ACCESS_TOKEN, song_id)
+		artist = track.get("artists", [{}])[0].get("name", "")
+		songs.append({"name": name, "artist": artist, "tempo": bpm, "id": song_id})
+
+	return songs  # Ensure the return statement is indented correctly
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)

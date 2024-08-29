@@ -1,0 +1,27 @@
+{% extends "home.html" %}
+	{% block results %}
+	
+	<br><br>
+	<hl>
+	
+	<form action='/recs' method='post' name='results-form'>
+		<table name="results-list" class='results-table'>
+			<caption>Recommended songs</caption>
+			<thead>
+				<th>Title</th>
+				<th>Artist</th>
+				<th>Tempo</th>
+			</thead>
+		{% for song in songs %}
+		
+			<tr>
+				<td>{{song['name']}}</td>	
+				<td>{{song['artist']}}</td>	
+				<td>{{song['tempo']}}</td>
+			</tr>
+
+		{% endfor %}
+
+		</table>
+	</form>
+{% endblock %}

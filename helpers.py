@@ -100,7 +100,7 @@ def recommend(song_id = '5mg6sU732O35VMfCYk3lmX'):      #"Ven Devorame Otra Vez"
         headers = {
                 "Authorization": f"Bearer {ACCESS_TOKEN}"
                 }
-        bpm = GST.tempo(song_id)
+        bpm = tempo(song_id)
         target = round(bpm)
         min_bpm = target * 0.95
         max_bpm = target * 1.05
@@ -139,5 +139,5 @@ def parse_tracks(data):
 
         for song in songs:
                 print(f"Title: {song[0]}\t\t Artist: {song[1]}\t\t id: {song[2]}")
-        return
+        return songs
 

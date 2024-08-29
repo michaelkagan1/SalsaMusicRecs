@@ -2,9 +2,11 @@
 
 {% block main %}
 
-	<form name='search-form'>
+	<form action='/home' name='search-form' method='post'>
 		<input name='title-input' type='text' autofocus autocomplete='off' placeholder='Song title'>
-		<button type='submit'>
+		<button type='submit'>Search</button>
 	</form>
+
+	{% block results %}{% endblock %}
 
 {% endblock %}
