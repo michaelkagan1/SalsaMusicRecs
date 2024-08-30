@@ -1,0 +1,25 @@
+<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+<div id="embed-iframe"></div>
+
+<script>
+
+const tracks = document.getElementsByName("play_button")
+
+window.onSpotifyIframeApiReady = (IFrameAPI) => {
+  const element = document.getElementById('embed-iframe');
+  const options = {
+	  uri: `spotify:track:${tracks[0].value}`
+    };
+  const callback = (EmbedController) => {
+  	tracks.forEach( track => {
+		track.addEventListener('click', () => {
+			EmbedController.loadUri(`spotify:track:${track.value}`)
+		});
+	});
+  };
+
+  IFrameAPI.createController(element, options, callback);
+};
+
+
+</script>

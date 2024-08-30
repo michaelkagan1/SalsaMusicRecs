@@ -4,12 +4,13 @@
 	<br><br>
 	<div class='container'>	
 		<form action='/recs' method='post' name='results-form'>
-			<table name="results-list" class="table table-success table-striped table-hover" style='width: 50%;'>
-				<caption style='caption-side: top; color: #198754' class='h5'>Recommendations</caption>
+			<table name="results-list" class="table table-success table-striped table-hover">
+				<caption style='caption-side: top;' class='h5 text-success-emphasis text-center' >Recommendations</caption>
 				<thead>
 					<th>Title</th>
 					<th>Artist</th>
 					<th>Tempo</th>
+					<th></th>
 				</thead>
 			{% for song in songs %}
 			
@@ -17,6 +18,11 @@
 					<td>{{song['name']}}</td>	
 					<td>{{song['artist']}}</td>	
 					<td>{{song['tempo']}}</td>
+					<td>
+						<input name='song_id' type='hidden' value={{song['id']}} >
+						<input name='request_type' type='hidden' value='put'>
+                                         	<button name='play_button' type='button' value={{song['id']}} class='btn badge text-success-emphasis'>&#9658;</button>
+					</td>
 				</tr>
 
 			{% endfor %}
@@ -24,4 +30,11 @@
 			</table>
 		</form>
 	</div>
+{% endblock %}
+
+
+{% block player %}
+
+	{% include "player.html" %}
+	
 {% endblock %}

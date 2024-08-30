@@ -5,7 +5,7 @@ adapted to python, flask
 
 ISSUES (8/27/24)
 	1. Works in Chrome but not in Safari. 
-	2. Next: check multiple scopes for permissions and encoding
+	2. Adjust results & recs tables + input field to dynamically adjust
 """
 import pdb
 
@@ -165,12 +165,31 @@ def home():
 @app.route("/recs", methods=['GET','POST'])
 def recs():
 	if request.method == 'POST':
+		path = request.form.get("request_type")
 		song_id = request.form.get("song_id")
+
+		if path == "put":
+			# Build playback PUT request
+			ACCESS_TOKEN = session['access_token']
+			endpoint = API_BASE_URL + "me/player/play"
+			
+			headers = { 
+					"Authorization": f"Bearer {ACCESS_TOKEN}",
+	      				"Content-Type": "application/json"
+	      				}
+
+			params = {
+					"context_uri": f"spotify:track:{song_id}"	
+					}
+			requests.put(endpoint, data=params, headers=headers)
+			return render_template("recs.html", songs=songs)
+
 		data = recommend(session['access_token'], song_id)	#Runs recommend function with token in session, based on speed and seed of queried song.				
 		songs = parse_tracks(session['access_token'], data)
 		
 		return render_template("recs.html", songs=songs)
-
+	
+	
 
 def song_search(ACCESS_TOKEN, song_name, limit=10):
 	#	ACCESS_TOKEN = session['access_token'] 

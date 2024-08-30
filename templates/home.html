@@ -4,13 +4,25 @@
 <div class='container'>
 	<br>
 	<form action='/home' name='search-form' method='post'>
-	<div class="input-group mb-3" style="width: 30%;">
-	    <input name='title-input' autofocus autocomplete='off' type="text" class="form-control" placeholder="Song title" aria-label="Song title" aria-describedby="button-addon2">
-	    <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Search Song</button>
-	</div>
+		<div class='row'>
+			<div class="col-sm-2 justify-content-md-left input-group mb-3" >	<!-- style="width: 30%;" -->
+			    <input required name='title-input' autofocus autocomplete='off' type="text" class="form-control" placeholder="Song title" aria-label="Song title" aria-describedby="button-addon2">
+			    <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Search Song</button>
+			</div>
+		</div>	
 	</form>
 
 </div>
-	{% block results %}{% endblock %}
+
+<div class='container'>
+	<div class='row'>
+		<div class='col my-auto'>
+			{% block results %}{% endblock %}
+		</div>
+		<div class='col my-auto'>
+			{% block player %}{% endblock %}
+		</div>
+	</div>
+</div>
 
 {% endblock %}

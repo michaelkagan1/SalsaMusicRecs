@@ -4,13 +4,14 @@
 
 <br><br>
 <hl>
-<div class='container'> 
+<div class='container-sm'> 
 	<form action='/recs' method='post' name='results-form'>
-		<table name="results-list" class="table table-success table-striped table-hover" style='width: 50%;'>
-			<caption style='caption-side: top' class='h5'>Choose a Song</caption>
+		<table name="results-list" class="table table-success table-striped table-hover">		<!-- style='width: 50%;'-->
+			<caption style='caption-side: top' class='h5 text-success-emphasis text-center'>Choose a Song</caption>
 			<thead>
 				<th>Title</th>
 				<th>Artist</th>
+				<th></th>
 				<th></th>
 			</thead>
 		{% for song in songs %}
@@ -20,7 +21,11 @@
 				<td>{{song['Artist']}}</td>	
 				<td>
 					<input name='song_id' type='hidden' value={{song['id']}} >
-					<button class='button-sml'>Find Recs</button>
+					<button type='submit' class='btn badge text-success-emphasis'>Get Recs</button>
+				</td>
+
+				<td>
+					<button name='play_button' type='button'  value={{song['id']}} class='btn badge text-success-emphasis'>&#9658;</button>
 				</td>
 			</tr>
 
@@ -29,5 +34,11 @@
 		</table>
 	</form>
 </div>
+
+{% endblock %}
+
+{% block player %}
+
+	{% include "player.html" %}
 
 {% endblock %}
