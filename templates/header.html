@@ -1,0 +1,10 @@
+<div class="px-3 py-2 border-bottom mb-3">
+        <div class="text-end">
+	{% if session['access_token'] %}	<!-- if user is logged in successfully, -->
+	<a class="btn btn-dark" href='/home'>Home</a>
+	  <a class="btn btn-dark" href='/logout'>Logout</a>
+	{% else %}
+	<a class="btn btn-dark" href='/login'>Login</a>
+	{% endif %}
+        </div>
+</div>

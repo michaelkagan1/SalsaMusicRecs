@@ -1,0 +1,49 @@
+<ul class="pagination">
+
+	{% py %}
+	
+	from math import ceil
+	pages = ceil(len(songs)/10)
+	
+	current  = {{page}}
+	start = current - 1
+	end = current + 1
+	if start < 1:
+    		start = 1
+    	if end > pages:
+		end = pages
+
+	{% endpy %}
+
+	<li class="page-item">
+		<a class="page-link" href="#" aria-label="Previous">
+			<span aria-hidden="true">«</span>
+		</a>
+	</li>
+	
+	<form action='/recs' method='get'>
+		{% for i in range(start, end+1) %}
+
+		<li class='page-item'>
+			<input type='hidden' name='page{{i-start}}' value={{i}}>	<!--name is page1, page2, page3 if page is "current page", should be highligted-->
+			<button class='page-link' href="/recs">{{i}}</button>
+		</li>
+
+		{% endfor %}
+
+	</form>
+
+
+
+	<li class="page-item">
+		<a class="page-link" href="#" aria-label="Next">
+		<span aria-hidden="true">»</span>
+		</a>
+	</li>
+</ul>
+
+<!--
+	<li class="page-item"><a class="page-link" href="#">1</a></li>
+	<li class="page-item"><a class="page-link" href="#">2</a></li>
+	<li class="page-item"><a class="page-link" href="#">3</a></li>
+-->

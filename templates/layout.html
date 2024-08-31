@@ -8,21 +8,15 @@
 	</head>
 
 	<body>
+		{% include "header.html" %}
 		<div class='container'>
 			<h1>
 				Salsa Music Recommendation
 			</h1>
 			<p class="h4 lead text-body-secondary">Find tempo-specific salsa songs, perfect for teaching and practicing as fast <small>(or slow!)</small> as you want</p>
 		</div>
-		<!--
-		<h1>Salsa Music Recommendation</h1>
-		<h5>Find tempo-specific salsa songs, perfect for teaching and practicing as fast (or slow!) as you want</h5>
-		<br>
-		-->	
 
 		{% block main %}{% endblock %}
-		
-
 
 		<div class="container">
 			<footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">

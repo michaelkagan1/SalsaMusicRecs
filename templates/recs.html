@@ -4,7 +4,7 @@
 	<br><br>
 	<div class='container'>	
 		<form action='/recs' method='post' name='results-form'>
-			<table name="results-list" class="table table-success table-striped table-hover">
+			<table name="results-list" class="table rounded table-success table-striped table-hover">
 				<caption style='caption-side: top;' class='h5 text-success-emphasis text-center' >Recommendations</caption>
 				<thead>
 					<th>Title</th>
@@ -15,7 +15,7 @@
 			{% for song in songs %}
 			
 				<tr>
-					<td>{{song['name']}}</td>	
+					<td>{{song['Title']}}</td>	
 					<td>{{song['artist']}}</td>	
 					<td>{{song['tempo']}}</td>
 					<td>

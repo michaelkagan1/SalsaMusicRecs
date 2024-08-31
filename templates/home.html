@@ -4,10 +4,12 @@
 <div class='container'>
 	<br>
 	<form action='/home' name='search-form' method='post'>
-		<div class='row'>
-			<div class="col-sm-2 justify-content-md-left input-group mb-3" >	<!-- style="width: 30%;" -->
-			    <input required name='title-input' autofocus autocomplete='off' type="text" class="form-control" placeholder="Song title" aria-label="Song title" aria-describedby="button-addon2">
-			    <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Search Song</button>
+		<div class='row g-3'>
+			<div class="justify-content-md-left input-group mb-3" >	<!-- style="width: 30%;" -->
+			    <input required name='title-input' autofocus autocomplete='off' type="text" class="w-50 form-control" placeholder="Song title" aria-label="Song title" aria-describedby="button-addon2">
+			    <button class="btn btn-outline-secondary" 
+				    {% if not session['access_token'] %} disabled {% endif %}
+				    type="submit" id="button-addon2">Search Song</button>
 			</div>
 		</div>	
 	</form>

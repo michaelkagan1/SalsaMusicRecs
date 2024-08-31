@@ -12,6 +12,7 @@ import pdb
 from flask import Flask, render_template, redirect, request, session, jsonify
 from flask_session import Session
 from datetime import datetime
+from cs50 import SQL
 import urllib.parse
 import requests, os
 import authorizeme
@@ -24,6 +25,9 @@ app.secret_key = 'Kjske-6VXxb-9p3vW-oIUt6'
 app.config["SESSION_PERMANENT"] = False         #treated like a session cookie, deletes session when browser/server quit
 app.config["SESSION_TYPE"] = "filesystem"       #contents of session stored in servers files, not in cookie. for privacy
 Session(app)
+
+#Setup sqlite database
+db = SQL("sqlite:///songs.db")
 
 #Set up constants for authorization data -- Adapted from "Spotify API OAuth - Automate Getting User Playlists (Complete Tutorial)" by Imdad Codes youtube video "aka: VIDEO"
 #USER_ID = 'mishka94'
@@ -41,7 +45,7 @@ API_BASE_URL = "https://api.spotify.com/v1/"
 @app.route("/", methods=["GET","POST"])
 def index():
 	print("Debug: index route reached!")
-	return "Welcome to my recommendation app.To proceed, <a href='/login'>Login to Spotify</a>" #Adapted from VIDEO. 
+	return render_template("home.html")
 
 @app.route("/login")
 def login(): 	#Adapted from Spotify documentation
@@ -64,6 +68,11 @@ def login(): 	#Adapted from Spotify documentation
 		auth_url = f"{AUTH_URL}?{urllib.parse.urlencode(params)}"	#adapted from VIDEO
 		auth_url = auth_url.replace('+','%20')				#+s in url string changed to %20. Might not be necessary, but gave it a shot in debugging
 		return redirect(auth_url)
+
+@app.route("/logout")
+def logout():
+	session.clear()
+	return redirect("/")
 
 @app.route("/callback", methods=["GET","POST"])
 def callback():
@@ -155,20 +164,20 @@ def home():
 	elif request.method == "POST":
 		#		pdb.set_trace()
 		query = request.form.get("title-input")
-		response = song_search(session['access_token'], query)
+		response = song_search(session['access_token'], query, limit=10)
 		if response.status_code != 200:
 			return response.text
 		songs = print_songs(response)
 
-		return render_template("results.html", songs=songs)
+		return render_template("results.html", songs=songs[:10])
 
 @app.route("/recs", methods=['GET','POST'])
 def recs():
 	if request.method == 'POST':
-		path = request.form.get("request_type")
+		path = request.form.get("request_type")	#This is the name label on the recs list buttons. 
 		song_id = request.form.get("song_id")
 
-		if path == "put":
+		if path == "put":		#Use put request to allow playback in user's personal spotify device. So far not working.
 			# Build playback PUT request
 			ACCESS_TOKEN = session['access_token']
 			endpoint = API_BASE_URL + "me/player/play"
@@ -186,12 +195,16 @@ def recs():
 
 		data = recommend(session['access_token'], song_id)	#Runs recommend function with token in session, based on speed and seed of queried song.				
 		songs = parse_tracks(session['access_token'], data)
-		
-		return render_template("recs.html", songs=songs)
-	
-	
+		for song in songs:	
+			db.execute("INSERT INTO songs (Title, artist, bpm, song_id) VALUES (?, ?, ?, ?)", song['Title'], song['artist'], song['tempo'], song['id'])
 
-def song_search(ACCESS_TOKEN, song_name, limit=10):
+		return render_template("recs.html", songs=songs)
+	elif request.method == "GET":	#path requested by page numbers in recs list
+		#Use a sqlite3 database to save tracks in recommended list. each time POST is requested, db is overwritten by results list
+		#and each get request from the page buttons will extract the offset number of tracks desired.
+		pass	
+
+def song_search(ACCESS_TOKEN, song_title, limit=10):
 	#	ACCESS_TOKEN = session['access_token'] 
 	headers = {
             "Authorization": f"Bearer {ACCESS_TOKEN}"
@@ -199,7 +212,7 @@ def song_search(ACCESS_TOKEN, song_name, limit=10):
 	endpoint = "https://api.spotify.com/v1/search"
 
 	params = {
-                'q': song_name,
+                'q': song_title,
                 'type': 'track',
                 'limit': limit
                 }
@@ -212,14 +225,10 @@ def print_songs(response):
 	tracks = data.get('tracks',{}).get('items',[])
 	songs = []
 	for track in tracks:
-		name = track.get('name')
+		title = track.get('name')
 		songid = track.get('id')
 		artist = track.get('artists', [{}])[0].get('name')
-		"""
-		print(f"Song: {name}, Artist: {artist}, song_id: {songid}")
-		print("\n") """
-		songs.append({"Title":name, "Artist":artist, "id":songid})
-		
+		songs.append({"Title":title, "artist":artist, "id":songid})
 	return songs
 
 def features(ACCESS_TOKEN, song_id):
@@ -244,7 +253,7 @@ def recommend(ACCESS_TOKEN, song_id = '5mg6sU732O35VMfCYk3lmX'):      #"Ven Devo
         target = round(bpm)
         min_bpm = target * 0.95
         max_bpm = target * 1.05
-        limit = 10
+        limit = 50
         tracks = [song_id]
         #set_trace()
         lim = f'limit={limit}'
@@ -267,28 +276,16 @@ def recommend(ACCESS_TOKEN, song_id = '5mg6sU732O35VMfCYk3lmX'):      #"Ven Devo
         print(f"{response.status_code}")
         return response.json()
 
-"""
-def parse_tracks(ACCESS_TOKEN, data):
-        tracks = data.get("tracks",[])
-        songs = []
-        for track in tracks:
-		name = track.get("name", "")
-		song_id = track.get("id", "")
-		bpm = tempo(ACCESS_TOKEN, song_id)
-		artist = track.get("artists", [{}])[0].get("name","")
-		songs.append({"name": name, "artist": artist, "tempo":bpm, "id":song_id})
-	return songs	
-"""	
 def parse_tracks(ACCESS_TOKEN, data):
 	tracks = data.get("tracks", [])
 	songs = []
 
 	for track in tracks:
-		name = track.get("name", "")
+		title = track.get("name", "")
 		song_id = track.get("id", "")
 		bpm = tempo(ACCESS_TOKEN, song_id)
 		artist = track.get("artists", [{}])[0].get("name", "")
-		songs.append({"name": name, "artist": artist, "tempo": bpm, "id": song_id})
+		songs.append({"Title": title, "artist": artist, "tempo": bpm, "id": song_id})
 
 	return songs  # Ensure the return statement is indented correctly
 
