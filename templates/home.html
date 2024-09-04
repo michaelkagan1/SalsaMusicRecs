@@ -3,8 +3,9 @@
 {% block main %}
 <div class='container'>
 	<br>
+	<div class='container'>
 	<form action='/home' name='search-form' method='post'>
-		<div class='row g-3'>
+		<div class='row'>
 			<div class="justify-content-md-left input-group mb-3" >	<!-- style="width: 30%;" -->
 			    <input required name='title-input' autofocus autocomplete='off' type="text" class="w-50 form-control" placeholder="Song title" aria-label="Song title" aria-describedby="button-addon2">
 			    <button class="btn btn-outline-secondary" 
@@ -13,18 +14,34 @@
 			</div>
 		</div>	
 	</form>
+	</div>
 
 </div>
 
 <div class='container'>
+	<br>
 	<div class='row'>
-		<div class='col my-auto'>
+		<div class='col-md-6 col-12 my-auto'>
 			{% block results %}{% endblock %}
 		</div>
-		<div class='col my-auto'>
+		<div class='col-md-6 col-12 my-auto'>
 			{% block player %}{% endblock %}
 		</div>
 	</div>
 </div>
+
+<div class='container mt-3'>
+	<div class='row'>
+		<div class='col d-flex justify-content-center'>
+			{% block pagination %}{% endblock %}
+		</div>
+		<div class='col my-auto text-center'>
+			
+		</div>
+	</div>
+</div>
+
+
+
 
 {% endblock %}

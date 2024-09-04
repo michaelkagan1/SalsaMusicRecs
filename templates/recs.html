@@ -1,35 +1,37 @@
 {% extends "home.html" %}
-	{% block results %}
-	
-	<br><br>
+
+{% block results %}
+<div>	
 	<div class='container'>	
 		<form action='/recs' method='post' name='results-form'>
-			<table name="results-list" class="table rounded table-success table-striped table-hover">
-				<caption style='caption-side: top;' class='h5 text-success-emphasis text-center' >Recommendations</caption>
+			<table id='song-table' name="results-list" class="table table-success table-striped table-hover">
 				<thead>
 					<th>Title</th>
 					<th>Artist</th>
-					<th>Tempo</th>
+					<!--	<th>Tempo</th>  -->
 					<th></th>
 				</thead>
-			{% for song in songs %}
-			
-				<tr>
-					<td>{{song['Title']}}</td>	
-					<td>{{song['artist']}}</td>	
-					<td>{{song['tempo']}}</td>
-					<td>
-						<input name='song_id' type='hidden' value={{song['id']}} >
-						<input name='request_type' type='hidden' value='put'>
-                                         	<button name='play_button' type='button' value={{song['id']}} class='btn badge text-success-emphasis'>&#9658;</button>
-					</td>
-				</tr>
-
-			{% endfor %}
-
+				<tbody id='results-body'>
+					{% for song in songs %}
+				
+					<tr>
+						<td>{{song['title']}}</td>	
+						<td>{{song['artist']}}</td>	
+						<!--	<td>{song['bpm']}}</td> -->
+						<td>
+							<input name='song_id' type='hidden' value={{song['song_id']}} >
+							<input name='request_type' type='hidden' value='put'>
+							<button name='play_button' type='button' value={{song['song_id']}} class='btn badge text-success-emphasis'>&#9658;</button>
+						</td>
+					</tr>
+				
+					{% endfor %}
+				</tbody>
 			</table>
 		</form>
 	</div>
+
+</div>
 {% endblock %}
 
 
@@ -37,4 +39,12 @@
 
 	{% include "player.html" %}
 	
+{% endblock %}
+
+
+
+{% block pagination %}
+
+	{% include "pagination.html" %}
+
 {% endblock %}

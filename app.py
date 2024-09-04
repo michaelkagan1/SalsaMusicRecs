@@ -2,54 +2,35 @@
 Using PKCE OAuth2 Flow: https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow#request-user-authorization
 adapted to python, flask
 
-
-ISSUES (8/27/24)
-	1. Works in Chrome but not in Safari. 
-	2. Adjust results & recs tables + input field to dynamically adjust
+Michael Kagan 2024
 """
 import pdb
 
 from flask import Flask, render_template, redirect, request, session, jsonify
 from flask_session import Session
 from datetime import datetime
-from cs50 import SQL
 import urllib.parse
-import requests, os
-import authorizeme
-import helpers as H	#my own python file
+import requests, os, math, time
+from config import *
 
 app = Flask(__name__)
-app.secret_key = 'Kjske-6VXxb-9p3vW-oIUt6'
-
-#Taken from CS50 lecture material
-app.config["SESSION_PERMANENT"] = False         #treated like a session cookie, deletes session when browser/server quit
-app.config["SESSION_TYPE"] = "filesystem"       #contents of session stored in servers files, not in cookie. for privacy
+app.config.from_pyfile("config.py")
 Session(app)
 
-#Setup sqlite database
-db = SQL("sqlite:///songs.db")
+#Setup sqlite database (in config)
 
 #Set up constants for authorization data -- Adapted from "Spotify API OAuth - Automate Getting User Playlists (Complete Tutorial)" by Imdad Codes youtube video "aka: VIDEO"
-#USER_ID = 'mishka94'
-CLIENT_ID = '2d5ddacbcfa74e2583a50fac031e5325'
-CLIENT_SECRET = 'c50abc283e004e989f1523c2d5aa8dfe'
-CODE_VERIFIER = authorizeme.randomString(50)
-CODE_CHALLENGE = authorizeme.hash(CODE_VERIFIER)
-STATE = authorizeme.randomString(16)
 REDIRECT_URI = "http://localhost:8000/callback"
 AUTH_URL = "https://accounts.spotify.com/authorize"
 TOKEN_URL = "https://accounts.spotify.com/api/token"
 API_BASE_URL = "https://api.spotify.com/v1/"
 
-
 @app.route("/", methods=["GET","POST"])
 def index():
-	print("Debug: index route reached!")
 	return render_template("home.html")
 
 @app.route("/login")
 def login(): 	#Adapted from Spotify documentation
-	print("Debug: login route reached!")
 	if request.method == "GET":
 		scopes  = ['user-modify-playback-state', 'streaming', 'playlist-modify-private', 'playlist-modify-public']      #List of all desired scopes for application, including adding/modifying
                 	                                                                                                        #playlists and allowing music playback.
@@ -76,7 +57,6 @@ def logout():
 
 @app.route("/callback", methods=["GET","POST"])
 def callback():
-	print("Debug: callback route reached!")
 
 	#check for error by not presence of "code" in the callback url 
 	if 'error' in request.args:
@@ -87,8 +67,6 @@ def callback():
 		return "State value mismatch!"
 
 	if 'code' in request.args:
-		print("fuck yeahh")
-		#pdb.set_trace()
 		authorization_code = request.args.get("code")	#authorization code returned from Spotify server during auth request
 
 		params = {
@@ -112,12 +90,10 @@ def callback():
 		session['access_token'] = data.get("access_token")
 		session['refresh_token'] = data.get("refresh_token")
 		session['expiration'] = datetime.now().timestamp() + data.get("expires_in")
-		print("before redirect")
 		return redirect("/home")
 
 @app.route("/refresh-token")
 def refresh_token():
-	print("Debug: refresh_token route reached!")
 	#Check cases where session doesn't contain refresh token (user not logged in), and if token not expired yet
 	if 'refresh_token' not in session:
 		return redirect("/login")
@@ -140,7 +116,7 @@ def refresh_token():
 	#Eliminate error case where status code is not 200
 	if response.status_code != 200:
 		print("Error on token refresh!\n" + response.text)
-
+		return redirect('/login')	
 	data = response.json()
 	session['access_token'] = data.get("access_token")
 	session['expiration'] = datetime.now().timestamp() + data.get("expires_in")
@@ -150,7 +126,6 @@ def refresh_token():
 
 @app.route("/home", methods=['GET','POST'])
 def home():
-	print("Debug: home route reached!")
 	if request.method == "GET":
 		if 'access_token' not in session:
 			return redirect("/login")
@@ -158,11 +133,13 @@ def home():
 			return redirect("/refresh-token")
 
 		response = song_search(session['access_token'], "Blackbird")
-#		print_songs(response)
 		
 		return render_template("home.html")
 	elif request.method == "POST":
-		#		pdb.set_trace()
+		if 'access_token' not in session:
+			return redirect("/login")
+		if datetime.now().timestamp() > session['expiration']:
+			return redirect("/refresh-token")
 		query = request.form.get("title-input")
 		response = song_search(session['access_token'], query, limit=10)
 		if response.status_code != 200:
@@ -192,17 +169,27 @@ def recs():
 					}
 			requests.put(endpoint, data=params, headers=headers)
 			return render_template("recs.html", songs=songs)
+		#Clear database saved songs from previous (recommend) query
+		db.execute("DELETE FROM songs")
 
 		data = recommend(session['access_token'], song_id)	#Runs recommend function with token in session, based on speed and seed of queried song.				
 		songs = parse_tracks(session['access_token'], data)
 		for song in songs:	
-			db.execute("INSERT INTO songs (Title, artist, bpm, song_id) VALUES (?, ?, ?, ?)", song['Title'], song['artist'], song['tempo'], song['id'])
+			db.execute("INSERT INTO songs (title, artist, song_id) VALUES (?, ?, ?)", song['title'], song['artist'], song['song_id'])
 
-		return render_template("recs.html", songs=songs)
-	elif request.method == "GET":	#path requested by page numbers in recs list
-		#Use a sqlite3 database to save tracks in recommended list. each time POST is requested, db is overwritten by results list
-		#and each get request from the page buttons will extract the offset number of tracks desired.
-		pass	
+	songs = db.execute("SELECT * FROM songs")
+	(songi, songf, pagei, pagef) = pagination(page=1)	
+	return render_template("recs.html", songs=songs[songi:songf], page=1, pagei=pagei, pagef=pagef)
+
+@app.route("/recs/<int:page>")	#Only used with get requests
+def page_route(page):
+	(songi, songf, pagei, pagef) = pagination(page)	
+	if page in range(pagei, pagef+1):
+		songs = db.execute("SELECT * FROM songs")
+		return render_template("recs.html", songs=songs[songi:songf], page=page, pagei=pagei, pagef=pagef)
+	else:
+		return render_template("layout.html", error="Page out of range!")
+
 
 def song_search(ACCESS_TOKEN, song_title, limit=10):
 	#	ACCESS_TOKEN = session['access_token'] 
@@ -255,7 +242,6 @@ def recommend(ACCESS_TOKEN, song_id = '5mg6sU732O35VMfCYk3lmX'):      #"Ven Devo
         max_bpm = target * 1.05
         limit = 50
         tracks = [song_id]
-        #set_trace()
         lim = f'limit={limit}'
         seed_tracks = 'seed_tracks='+(',').join(tracks)
         seed_genres = 'seed_genres=salsa'
@@ -273,7 +259,6 @@ def recommend(ACCESS_TOKEN, song_id = '5mg6sU732O35VMfCYk3lmX'):      #"Ven Devo
         if response.status_code != 200:
                 print(f"Error: {response.status_code}, {response.text}")
                 return None
-        print(f"{response.status_code}")
         return response.json()
 
 def parse_tracks(ACCESS_TOKEN, data):
@@ -283,11 +268,32 @@ def parse_tracks(ACCESS_TOKEN, data):
 	for track in tracks:
 		title = track.get("name", "")
 		song_id = track.get("id", "")
-		bpm = tempo(ACCESS_TOKEN, song_id)
+		#bpm = tempo(ACCESS_TOKEN, song_id)
 		artist = track.get("artists", [{}])[0].get("name", "")
-		songs.append({"Title": title, "artist": artist, "tempo": bpm, "id": song_id})
-
+		#songs.append({"title": title, "artist": artist, "bpm": bpm, "song_id": song_id})
+		songs.append({"title": title, "artist": artist, "song_id": song_id})
+		time.sleep(.02)
 	return songs  # Ensure the return statement is indented correctly
+def pagination(page):
+	query =  db.execute('SELECT COUNT (*) AS count FROM songs')	#queries all songs from database
+	num_songs = query[0]['count']		#counts total songs available
+	maxpage = math.ceil(num_songs/10)	#finds max number of pages to generate. 
+
+	pagei = max(page - 1, 1)		#first page is the larger of 1 or page - 1 
+	pagef = min(page + 1, maxpage)		#final page is the smaller of maxpage or page + 1
+	numpages = pagef-pagei + 1		#numpages keeps track of number of pages generated
+	while numpages < min(3, maxpage):	#adds pages until max pages is generated, capped out at 3 pages. 
+		if pagef<maxpage:
+			pagef += 1
+			numpages += 1
+		else:
+			pagei -= 1
+			numpages += 1
+
+	songi = (page-1) * 10			#first song, referenced by which page
+	songf = min( (songi + 10) ,num_songs-1)	#final song, either initial song + 10 or the last song, whichever is smaller
+
+	return songi, songf, pagei, pagef	#returns all 4 numbers to the route page rendering. Used in jinja2 loop in the html to generate the relevant song list and page links
 
 if __name__ == "__main__":
-    app.run(port=8000, debug=True)
+    app.run(port=8000, debug=False)

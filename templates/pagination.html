@@ -1,49 +1,19 @@
 <ul class="pagination">
 
-	{% py %}
-	
-	from math import ceil
-	pages = ceil(len(songs)/10)
-	
-	current  = {{page}}
-	start = current - 1
-	end = current + 1
-	if start < 1:
-    		start = 1
-    	if end > pages:
-		end = pages
-
-	{% endpy %}
-
-	<li class="page-item">
-		<a class="page-link" href="#" aria-label="Previous">
+	<li id='pg-back' class="page-item {% if page == pagei %}disabled{% endif %}">
+		<a class="page-link" href="/recs/{{page - 1}}" aria-label="Previous">
 			<span aria-hidden="true">«</span>
 		</a>
 	</li>
+		
+	{% for i in range(pagei,pagef+1) %}
+	<li class='page-item {% if i == page %}active{% endif %}'>  <a class='page-link' href='/recs/{{i}}'> {{i}} </a></li>
+	{% endfor %}
 	
-	<form action='/recs' method='get'>
-		{% for i in range(start, end+1) %}
-
-		<li class='page-item'>
-			<input type='hidden' name='page{{i-start}}' value={{i}}>	<!--name is page1, page2, page3 if page is "current page", should be highligted-->
-			<button class='page-link' href="/recs">{{i}}</button>
-		</li>
-
-		{% endfor %}
-
-	</form>
-
-
-
-	<li class="page-item">
-		<a class="page-link" href="#" aria-label="Next">
+	<li id='pg-forward' class="page-item {% if page == pagef %}disabled{% endif %}">
+		<a class="page-link" href="/recs/{{page + 1}}" aria-label="Next">
 		<span aria-hidden="true">»</span>
 		</a>
 	</li>
 </ul>
 
-<!--
-	<li class="page-item"><a class="page-link" href="#">1</a></li>
-	<li class="page-item"><a class="page-link" href="#">2</a></li>
-	<li class="page-item"><a class="page-link" href="#">3</a></li>
--->
