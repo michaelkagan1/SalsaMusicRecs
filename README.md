@@ -6,11 +6,11 @@
 	- Add the callback URI: `http://localhost:8000/callback`
 2. Make a random string that will be your secret key.
 3. Create a environment file named `.env` in the main flask app directory with the following code:
-`
+```
 SECRET_KEY=your_secret_key_here
 CLIENT_ID=your_client_id_here
 CLIENT_SECRET=your_client_secret_here
-`
+```
 Be sure to avoid any spaces or quotes.
 4. Run app on port 8000 with the following code: `flask run --port=8000` (that's what my callback URI uses)
 
