@@ -1,0 +1,10 @@
+.env
+archived
+spotify_flask_env
+aws_ec2.txt
+ec2keypair_backup.pem
+salsa_song_recs_key_pair.pem
+flask_session
+Salsa\ Song\ Recs\ Demo\ 2.mov
+Procfile
+__pycache__

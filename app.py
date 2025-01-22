@@ -4,6 +4,8 @@ adapted to python, flask
 
 Michael Kagan 2024
 """
+#TODO: resolve Nonetype response from features (when get recs button pressed)
+
 from flask import Flask, render_template, redirect, request, session, jsonify
 from flask_session import Session
 from datetime import datetime
